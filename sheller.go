@@ -9,6 +9,7 @@ import (
 
 	"github.com/creack/pty"
 	"github.com/pkg/term"
+	terminal "golang.org/x/term"
 )
 
 func main() {
@@ -35,6 +36,27 @@ func main() {
 		panic(err)
 	}
 	defer t.Restore()
+
+	// Function to resize the PTY based on the current window size.
+	resizePty := func() {
+		width, height, err := terminal.GetSize(int(os.Stdin.Fd()))
+		if err != nil {
+			return
+		}
+		pty.Setsize(ptmx, &pty.Winsize{Cols: uint16(width), Rows: uint16(height)})
+	}
+
+	// Initial resize.
+	resizePty()
+
+	// Handle window size changes.
+	sigwinch := make(chan os.Signal, 1)
+	signal.Notify(sigwinch, syscall.SIGWINCH)
+	go func() {
+		for range sigwinch {
+			resizePty()
+		}
+	}()
 
 	// Handle SIGHUP signal.
 	signalChan := make(chan os.Signal, 1)
