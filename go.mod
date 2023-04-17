@@ -1,4 +1,4 @@
-module github.com/2JS/sheller
+module github.com/2JS/chatsh
 
 go 1.19
 
