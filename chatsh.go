@@ -17,10 +17,7 @@ func main() {
 	pipePath := "/tmp/chatsh.pipe"
 
 	// Create a named pipe.
-	err := syscall.Mkfifo(pipePath, 0644)
-	if err != nil {
-		panic(err)
-	}
+	_ = syscall.Mkfifo(pipePath, 0644)
 
 	argument := fmt.Sprintf(`script -F >(sed -u 's/\x1b\[[0-9;]*[a-zA-Z]//g' > %s)`, pipePath)
 
