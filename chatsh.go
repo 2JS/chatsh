@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -13,18 +14,17 @@ import (
 )
 
 func main() {
-	shell := "zsh"
-	arguments := `script -q >(sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' | awk -v maxlines=1000 -v prefix=small_output_ '
-{
-    output_file = prefix count ".txt";
-    print >> output_file;
-    if (NR % maxlines == 0) {
-        close(output_file);
-        count++;
-    }
-}')`
+	pipePath := "/tmp/chatsh.pipe"
 
-	cmd := exec.Command(shell, "-c", arguments)
+	// Create a named pipe.
+	err := syscall.Mkfifo(pipePath, 0644)
+	if err != nil {
+		panic(err)
+	}
+
+	argument := fmt.Sprintf(`script -F >(sed -u 's/\x1b\[[0-9;]*[a-zA-Z]//g' > %s)`, pipePath)
+
+	cmd := exec.Command("zsh", "-c", argument)
 
 	// Create a new PTY.
 	ptmx, err := pty.Start(cmd)
