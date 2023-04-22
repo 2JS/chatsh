@@ -13,9 +13,18 @@ import (
 )
 
 func main() {
-	shell := "/bin/zsh"
+	shell := "zsh"
+	arguments := `script -q >(sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' | awk -v maxlines=1000 -v prefix=small_output_ '
+{
+    output_file = prefix count ".txt";
+    print >> output_file;
+    if (NR % maxlines == 0) {
+        close(output_file);
+        count++;
+    }
+}')`
 
-	cmd := exec.Command(shell)
+	cmd := exec.Command(shell, "-c", arguments)
 
 	// Create a new PTY.
 	ptmx, err := pty.Start(cmd)
@@ -79,5 +88,5 @@ func main() {
 		panic(err)
 	}
 
-	println("Shell command completed successfully.")
+	println("chatsh exit.")
 }
