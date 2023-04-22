@@ -19,7 +19,7 @@ func main() {
 	// Create a named pipe.
 	_ = syscall.Mkfifo(pipePath, 0644)
 
-	argument := fmt.Sprintf(`script -F >(sed -u 's/\x1b\[[0-9;]*[a-zA-Z]//g' > %s)`, pipePath)
+	argument := fmt.Sprintf(`CHATSH=1 script -q -F >(sed -u 's/\x1b\[[0-9;]*[a-zA-Z]//g' > %s)`, pipePath)
 
 	cmd := exec.Command("zsh", "-c", argument)
 
