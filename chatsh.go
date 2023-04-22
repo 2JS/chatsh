@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	pipePath := "/tmp/chatsh.pipe"
+	pipePath := "/tmp/chatsh/io.pipe"
 
 	// Create a named pipe.
 	_ = syscall.Mkfifo(pipePath, 0644)
