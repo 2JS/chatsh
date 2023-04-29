@@ -33,7 +33,7 @@ func (client *Client) stream(input string) (chan string, error) {
 	client.messages = append(client.messages, new_request)
 
 	req := go_openai.ChatCompletionRequest{
-		Model:     go_openai.GPT3Dot5Turbo,
+		Model:     go_openai.GPT4,
 		MaxTokens: 500,
 		Messages:  client.messages,
 		Stream:    true,
