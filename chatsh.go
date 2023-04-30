@@ -60,14 +60,13 @@ func main() {
 			prompt := fmt.Sprintf("Shell:\r\n%s\r\n\r\nUser: %s", shellio, command)
 			builder.Reset()
 
-			fmt.Fprintln(os.Stderr, prompt)
+			// fmt.Fprintln(os.Stderr, prompt)
 
 			response, err := client.stream(prompt)
 			if err != nil {
 				panic(err)
 			}
 
-			answers <- "GPT: \r\n"
 			for token := range response {
 				answers <- strings.ReplaceAll(token, "\n", "\r\n")
 			}
