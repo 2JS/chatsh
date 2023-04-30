@@ -1,0 +1,3 @@
+#!/bin/zsh
+echo $@ > /tmp/chatsh/cmd/reader.pipe
+cat /tmp/chatsh/cmd/writer.pipe
