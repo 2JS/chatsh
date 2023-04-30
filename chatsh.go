@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"syscall"
 )
 
 func main() {
@@ -21,7 +20,7 @@ func main() {
 	pipePath := "/tmp/chatsh/io.pipe"
 
 	// Create a named pipe.
-	_ = syscall.Mkfifo(pipePath, 0644)
+	pipe := NewPipe(pipePath)
 
 	argument := fmt.Sprintf(`CHATSH=1 script -q -F >(sed -u 's/\x1b\[[0-9;]*[a-zA-Z]//g' > %s)`, pipePath)
 
@@ -35,29 +34,32 @@ func main() {
 	builder := new(strings.Builder)
 
 	go func() {
-		streamio := streamIO()
-
-		for io := range streamio {
+		for io := range pipe.ReadChannel() {
 			builder.WriteString(io)
 		}
 	}()
 
 	go func() {
-		// client.AddPrompt(system)
 		channel, _ := client.stream(system)
 		for token := range channel {
 			fmt.Fprint(os.Stderr, strings.ReplaceAll(token, "\n", "\r\n"))
 		}
 
-		commands := streamCmd()
+		cmdPipe := NewBidirectionalPipe(
+			"/tmp/chatsh/cmd/reader.pipe",
+			"/tmp/chatsh/cmd/writer.pipe",
+		)
+
+		commands := cmdPipe.ReadChannel()
 
 		for command := range commands {
+			answers := cmdPipe.WriteChannel()
+
 			_ = fmt.Sprint(command)
 			shellio := builder.String()
 			prompt := fmt.Sprintf("Shell:\r\n%s\r\n\r\nUser: %s", shellio, command)
 			builder.Reset()
 
-			// fmt.Print(prompt)
 			fmt.Fprintln(os.Stderr, prompt)
 
 			response, err := client.stream(prompt)
@@ -65,11 +67,12 @@ func main() {
 				panic(err)
 			}
 
-			fmt.Print("GPT: ")
+			answers <- "GPT: \r\n"
 			for token := range response {
-				fmt.Print(strings.ReplaceAll(token, "\n", "\r\n"))
+				answers <- strings.ReplaceAll(token, "\n", "\r\n")
 			}
-			fmt.Print("\r\n")
+			answers <- "\r\n"
+			close(answers)
 		}
 	}()
 

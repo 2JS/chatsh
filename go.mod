@@ -9,6 +9,6 @@ require (
 )
 
 require (
-	github.com/sashabaranov/go-openai v1.9.0 // indirect
+	github.com/sashabaranov/go-openai v1.9.0
 	golang.org/x/sys v0.7.0 // indirect
 )
